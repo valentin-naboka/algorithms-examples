@@ -53,4 +53,7 @@ func main() {
 	tree.TraverseRecursivelyNLR(root, visitor)
 	print("\n")
 	tree.TraverseRecursivelyLNR(root, visitor)
+
+	print("\n")
+	tree.TraverseLNR(root, visitor)
 }

@@ -41,29 +41,37 @@ func TraverseRecursivelyLNR(n *Node, visitor visitor) {
 	}
 }
 
-// func printNR(n *Node) {
-// 	stack := make([]*Node, 0)
-// 	ok := true
-// 	currNode := n
-// 	for ok {
-// 		if currNode != nil {
-// 			if currNode.Right != nil {
-// 				stack = append(stack, currNode.Right)
-// 			}
-// 			if currNode.Left != nil {
-// 				stack = append(stack, currNode.Left)
-// 			}
-// 			// stack = append(stack, currNode)
-// 			println(currNode.Value.(int))
-// 		}
-// 		ok = len(stack) > 0
-// 		if ok {
-// 			currNode = stack[len(stack)-1]
-// 			stack = stack[0 : len(stack)-1]
-// 		}
-// 	}
-// }
+func toNode(v interface{}) *Node {
+	node, ok := v.(*Node)
+	if !ok {
+		panic("value is not *Node")
+	}
+	return node
+}
 
+//TODO: add comment
+func TraverseLNR(n *Node, visitor visitor) {
+	stack := Stack{}
+	notEmpty := true
+	currNode := n
+	for notEmpty {
+		if currNode != nil {
+			if currNode.Right != nil {
+				stack.Push(currNode.Right)
+			}
+			if currNode.Left != nil {
+				stack.Push(currNode.Left)
+			}
+			visitor(currNode.Value.(int))
+		}
+		notEmpty = !stack.IsEmpty()
+		if notEmpty {
+			currNode = toNode(stack.Pop())
+		}
+	}
+}
+
+//TODO: implement
 // func printTree(n *Node) {
 // 	queue := make([]*Node, 0)
 // 	ok := true
