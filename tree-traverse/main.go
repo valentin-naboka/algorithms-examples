@@ -39,13 +39,16 @@ func makeTree() *tree.Node {
 }
 
 func main() {
-
 	root := makeTree()
-	tree.TraverseRecursivelyLRN(root, func(v interface{}) {
+	visitor := func(v interface{}) {
 		value, ok := v.(int)
 		if !ok {
 			panic("unexpected node value type")
 		}
 		fmt.Printf("%d ", value)
-	})
+	}
+
+	tree.TraverseRecursivelyLRN(root, visitor)
+	print("\n")
+	tree.TraverseRecursivelyNLR(root, visitor)
 }

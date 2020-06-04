@@ -1,9 +1,12 @@
 package tree
 
-import "fmt"
+type visitor func(Value interface{})
 
-//Post-order
-func TraverseRecursivelyLRN(n *Node, visitor func(Value interface{})) {
+// TraverseRecursivelyLRN is a post-order traverse.
+// Traverse the left subtree by recursively calling the post-order function.
+// Traverse the right subtree by recursively calling the post-order function.
+// Access the data part of the current node.
+func TraverseRecursivelyLRN(n *Node, visitor visitor) {
 	if n != nil {
 		TraverseRecursivelyLRN(n.Left, visitor)
 		TraverseRecursivelyLRN(n.Right, visitor)
@@ -11,57 +14,62 @@ func TraverseRecursivelyLRN(n *Node, visitor func(Value interface{})) {
 	}
 }
 
-func printTreeRecursive(n *Node, h int) {
+// TraverseRecursivelyNLR is a pre-order traverse.
+// Pre-order (NLR)
+// Access the data part of the current node.
+// Traverse the left subtree by recursively calling the pre-order function.
+// Traverse the right subtree by recursively calling the pre-order function.
+// The pre-order traversal is a topologically sorted one, because a parent node is processed before any of its child nodes is done.
+func TraverseRecursivelyNLR(n *Node, visitor visitor) {
 	if n != nil {
-		fmt.Printf("%*s%d", h*3, "", n.Value.(int))
-		fmt.Printf("\n")
-		printTreeRecursive(n.Left, h+1)
-		printTreeRecursive(n.Right, h+1)
+		visitor(n.Value)
+		TraverseRecursivelyNLR(n.Left, visitor)
+		TraverseRecursivelyNLR(n.Right, visitor)
 	}
 }
 
-func printNR(n *Node) {
-	stack := make([]*Node, 0)
-	ok := true
-	currNode := n
-	for ok {
-		if currNode != nil {
-			if currNode.Right != nil {
-				stack = append(stack, currNode.Right)
-			}
-			if currNode.Left != nil {
-				stack = append(stack, currNode.Left)
-			}
-			// stack = append(stack, currNode)
-			println(currNode.Value.(int))
-		}
-		ok = len(stack) > 0
-		if ok {
-			currNode = stack[len(stack)-1]
-			stack = stack[0 : len(stack)-1]
-		}
-	}
-}
+// func printNR(n *Node) {
+// 	stack := make([]*Node, 0)
+// 	ok := true
+// 	currNode := n
+// 	for ok {
+// 		if currNode != nil {
+// 			if currNode.Right != nil {
+// 				stack = append(stack, currNode.Right)
+// 			}
+// 			if currNode.Left != nil {
+// 				stack = append(stack, currNode.Left)
+// 			}
+// 			// stack = append(stack, currNode)
+// 			println(currNode.Value.(int))
+// 		}
+// 		ok = len(stack) > 0
+// 		if ok {
+// 			currNode = stack[len(stack)-1]
+// 			stack = stack[0 : len(stack)-1]
+// 		}
+// 	}
+// }
 
-func printTree(n *Node) {
-	queue := make([]*Node, 0)
-	ok := true
-	currNode := n
-	for ok {
-		if currNode != nil {
-			println(currNode.Value.(int))
-			if currNode.Right != nil {
-				queue = append(queue, currNode.Right)
-			}
-			if currNode.Left != nil {
-				queue = append(queue, currNode.Left)
-			}
-			// stack = append(stack, currNode)
-		}
-		ok = len(queue) > 0
-		if ok {
-			currNode = queue[0]
-			queue = queue[1:len(queue)]
-		}
-	}
-}
+// func printTree(n *Node) {
+// 	queue := make([]*Node, 0)
+// 	ok := true
+// 	currNode := n
+// 	for ok {
+// 		if currNode != nil {
+// 			println(currNode.Value.(int))
+// 			if currNode.Right != nil {
+// 				queue = append(queue, currNode.Right)
+// 			}
+// 			if currNode.Left != nil {
+// 				queue = append(queue, currNode.Left)
+// 			}
+// 			// stack = append(stack, currNode)
+// 		}
+// 		ok = len(queue) > 0
+// 		if ok {
+// 			currNode = queue[0]
+// 			queue = queue[1:len(queue)]
+// 		}
+// 	}
+// }
