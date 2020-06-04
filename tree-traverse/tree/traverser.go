@@ -15,7 +15,6 @@ func TraverseRecursivelyLRN(n *Node, visitor visitor) {
 }
 
 // TraverseRecursivelyNLR is a pre-order traverse.
-// Pre-order (NLR)
 // Access the data part of the current node.
 // Traverse the left subtree by recursively calling the pre-order function.
 // Traverse the right subtree by recursively calling the pre-order function.
@@ -24,6 +23,20 @@ func TraverseRecursivelyNLR(n *Node, visitor visitor) {
 	if n != nil {
 		visitor(n.Value)
 		TraverseRecursivelyNLR(n.Left, visitor)
+		TraverseRecursivelyNLR(n.Right, visitor)
+	}
+}
+
+// TraverseRecursivelyLNR is a in-order traverse.
+// Traverse the left subtree by recursively calling the in-order function.
+// Access the data part of the current node.
+// Traverse the right subtree by recursively calling the in-order function.
+// In a binary search tree ordered such that in each node the key is greater than all keys in its left subtree and less than all keys in its right subtree,
+// in-order traversal retrieves the keys in ascending sorted order.
+func TraverseRecursivelyLNR(n *Node, visitor visitor) {
+	if n != nil {
+		TraverseRecursivelyNLR(n.Left, visitor)
+		visitor(n.Value)
 		TraverseRecursivelyNLR(n.Right, visitor)
 	}
 }
