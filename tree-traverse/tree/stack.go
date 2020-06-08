@@ -1,9 +1,5 @@
 package tree
 
-// type Value interface{
-
-// }
-
 type Value interface{}
 
 type Stack struct {
@@ -23,8 +19,9 @@ func (s *Stack) Pop() Value {
 		panic("Attempt to pop empty stack.")
 	}
 
-	v := s.data[0]
-	s.data = s.data[1:len(s.data)]
+	stackLen := len(s.data)
+	v := s.data[stackLen-1]
+	s.data = s.data[0 : len(s.data)-1]
 	return v
 }
 
