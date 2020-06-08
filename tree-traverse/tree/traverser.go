@@ -1,5 +1,7 @@
 package tree
 
+import "github.com/algorithms-examples/tree-traverse/stack"
+
 type visitor func(Value interface{})
 
 // TraverseRecursivelyLRN is a post-order traverse.
@@ -51,7 +53,7 @@ func toNode(v interface{}) *Node {
 
 //TODO: add comment
 func TraverseLNR(n *Node, visitor visitor) {
-	stack := Stack{}
+	stack := stack.Stack{}
 	notEmpty := true
 	currNode := n
 	for notEmpty {

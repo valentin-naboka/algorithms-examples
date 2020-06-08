@@ -1,4 +1,4 @@
-package tree
+package stack
 
 type Value interface{}
 
@@ -21,7 +21,7 @@ func (s *Stack) Pop() Value {
 
 	stackLen := len(s.data)
 	v := s.data[stackLen-1]
-	s.data = s.data[0 : len(s.data)-1]
+	s.data = s.data[0 : stackLen-1]
 	return v
 }
 
