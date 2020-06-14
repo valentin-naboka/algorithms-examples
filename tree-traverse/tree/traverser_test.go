@@ -113,3 +113,11 @@ func TestTraverseLNR(t *testing.T) {
 		expected,
 		TraverseLNR)
 }
+
+func TestTraverseBFS(t *testing.T) {
+	expected := []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}
+
+	testTree(t,
+		expected,
+		TraverseBFS)
+}

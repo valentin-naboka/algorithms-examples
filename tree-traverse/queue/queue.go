@@ -1,20 +1,18 @@
 package queue
 
-type Value interface{}
-
 type Queue struct {
-	data []Value
+	data []interface{}
 }
 
 func NewQueue() *Queue {
-	return &Queue{make([]Value, 0)}
+	return &Queue{make([]interface{}, 0)}
 }
 
-func (s *Queue) Put(v Value) {
+func (s *Queue) Push(v interface{}) {
 	s.data = append(s.data, v)
 }
 
-func (s *Queue) Pop() Value {
+func (s *Queue) Pop() interface{} {
 	if s.IsEmpty() {
 		panic("Attempt to pop empty queue.")
 	}

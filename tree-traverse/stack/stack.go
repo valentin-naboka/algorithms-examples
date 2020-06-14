@@ -1,20 +1,18 @@
 package stack
 
-type Value interface{}
-
 type Stack struct {
-	data []Value
+	data []interface{}
 }
 
 func NewStack() *Stack {
-	return &Stack{make([]Value, 0)}
+	return &Stack{make([]interface{}, 0)}
 }
 
-func (s *Stack) Push(v Value) {
+func (s *Stack) Push(v interface{}) {
 	s.data = append(s.data, v)
 }
 
-func (s *Stack) Pop() Value {
+func (s *Stack) Pop() interface{} {
 	if s.IsEmpty() {
 		panic("Attempt to pop empty stack.")
 	}

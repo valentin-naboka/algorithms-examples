@@ -1,6 +1,9 @@
 package tree
 
-import "github.com/algorithms-examples/tree-traverse/stack"
+import (
+	"github.com/algorithms-examples/tree-traverse/queue"
+	"github.com/algorithms-examples/tree-traverse/stack"
+)
 
 //Visitor interface to visit nodes while traversing the tree.
 type Visitor interface {
@@ -132,26 +135,23 @@ func TraverseLNR(n *Node, visitor Visitor) {
 	})
 }
 
-//TODO: implement
-// func printTree(n *Node) {
-// 	queue := make([]*Node, 0)
-// 	ok := true
-// 	currNode := n
-// 	for ok {
-// 		if currNode != nil {
-// 			println(currNode.Value.(int))
-// 			if currNode.Right != nil {
-// 				queue = append(queue, currNode.Right)
-// 			}
-// 			if currNode.Left != nil {
-// 				queue = append(queue, currNode.Left)
-// 			}
-// 			// stack = append(stack, currNode)
-// 		}
-// 		ok = len(queue) > 0
-// 		if ok {
-// 			currNode = queue[0]
-// 			queue = queue[1:len(queue)]
-// 		}
-// 	}
-// }
+//TraverseBFS is a breadth-first search, which visits every node on a level before going to a lower level.
+func TraverseBFS(n *Node, visitor Visitor) {
+	queue := queue.Queue{}
+	currNode := n
+	for currNode != nil {
+		if currNode.Left != nil {
+			queue.Push(currNode.Left)
+		}
+		if currNode.Right != nil {
+			queue.Push(currNode.Right)
+		}
+		visitor.visit(currNode.Value.(int))
+
+		if !queue.IsEmpty() {
+			currNode = toNode(queue.Pop())
+		} else {
+			currNode = nil
+		}
+	}
+}

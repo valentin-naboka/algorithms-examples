@@ -11,7 +11,7 @@ type data []int
 func newQueue(d data) *Queue {
 	stack := NewQueue()
 	for _, v := range d {
-		stack.Put(v)
+		stack.Push(v)
 	}
 	return stack
 }
@@ -43,7 +43,7 @@ func TestPushPop(t *testing.T) {
 				t.Errorf("Expected: %d, Actual: %d", expected, actual)
 			}
 		}
-		queue.Put(v)
+		queue.Push(v)
 	}
 
 	for i := 2; !queue.IsEmpty(); i++ {
