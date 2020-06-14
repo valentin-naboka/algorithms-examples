@@ -23,5 +23,5 @@ func PrintCaller(depth int) {
 		}
 		return n[i+1:]
 	}
-	fmt.Printf("\n%s: line %d  Function: %s\n\n", trimName(file), line, trimName(runtime.FuncForPC(function).Name()))
+	fmt.Printf("\n%s: line %d, function: %s\n\n", trimName(file), line, trimName(runtime.FuncForPC(function).Name()))
 }

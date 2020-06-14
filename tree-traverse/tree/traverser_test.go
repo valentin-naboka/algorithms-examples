@@ -8,10 +8,12 @@ import (
 )
 
 // Input tree visualization
-//     1
+// .
+// └── 1
 //     ├── 3
 //     │   ├── 7
-//     │   │   └── 12
+//     │   │   ├── 12
+//     │   │   └──
 //     │   └── 6
 //     └── 2
 //         ├── 5
@@ -78,12 +80,36 @@ func testTree(t *testing.T, expected []interface{}, traverser func(*Node, Visito
 	}
 }
 
-func TestTraverseRecursevely(t *testing.T) {
+func TestTraverseNLR(t *testing.T) {
+	expected := []interface{}{1, 2, 4, 8, 9, 5, 10, 11, 3, 6, 7, 12}
 	testTree(t,
-		[]interface{}{1, 2, 4, 8, 9, 5, 10, 11, 3, 6, 7, 12},
+		expected,
 		TraverseRecursivelyNLR)
 
 	testTree(t,
-		[]interface{}{8, 4, 9, 2, 5, 10, 11, 6, 3, 12, 7},
+		expected,
+		TraverseNLR)
+
+}
+
+func TestTraverseLRN(t *testing.T) {
+	expected := []interface{}{8, 9, 4, 10, 11, 5, 2, 6, 12, 7, 3, 1}
+	testTree(t,
+		expected,
+		TraverseRecursivelyLRN)
+
+	testTree(t,
+		expected,
+		TraverseLRN)
+}
+
+func TestTraverseLNR(t *testing.T) {
+	expected := []interface{}{8, 4, 9, 2, 10, 5, 11, 1, 6, 3, 7, 12}
+	testTree(t,
+		expected,
 		TraverseRecursivelyLNR)
+
+	testTree(t,
+		expected,
+		TraverseLNR)
 }
