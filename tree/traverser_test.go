@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/algorithms-examples/tree-traverse/testutil"
+	"github.com/algorithms-examples/testutil"
 )
 
 // Input tree visualization

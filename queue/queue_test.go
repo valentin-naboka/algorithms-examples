@@ -1,15 +1,15 @@
-package stack
+package queue
 
 import (
 	"testing"
 
-	"github.com/algorithms-examples/tree-traverse/testutil"
+	"github.com/algorithms-examples/testutil"
 )
 
 type data []int
 
-func newStack(d data) *Stack {
-	stack := NewStack()
+func newQueue(d data) *Queue {
+	stack := NewQueue()
 	for _, v := range d {
 		stack.Push(v)
 	}
@@ -19,8 +19,8 @@ func newStack(d data) *Stack {
 func TestPush(t *testing.T) {
 
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	stack := newStack(input)
-	for i := len(input) - 1; !stack.IsEmpty(); i-- {
+	stack := newQueue(input)
+	for i := 0; !stack.IsEmpty(); i++ {
 		actual := testutil.ToInt(stack.Pop())
 		expected := input[i]
 		if actual != expected {
@@ -32,26 +32,25 @@ func TestPush(t *testing.T) {
 func TestPushPop(t *testing.T) {
 
 	input := []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	stack := NewStack()
+	queue := NewQueue()
+	expectedIdx := 0
 	for i, v := range input {
 		if i != 0 && i%3 == 0 {
-			actual := testutil.ToInt(stack.Pop())
-			expected := input[i-1]
+			actual := testutil.ToInt(queue.Pop())
+			expected := input[expectedIdx]
+			expectedIdx++
 			if actual != expected {
 				t.Errorf("Expected: %d, Actual: %d", expected, actual)
 			}
 		}
-		stack.Push(v)
+		queue.Push(v)
 	}
 
-	for i := len(input) - 1; !stack.IsEmpty(); i-- {
-		actual := testutil.ToInt(stack.Pop())
+	for i := 2; !queue.IsEmpty(); i++ {
+		actual := testutil.ToInt(queue.Pop())
 		expected := input[i]
 		if actual != expected {
 			t.Errorf("Expected: %d, Actual: %d", expected, actual)
-		}
-		if i != 0 && i%3 == 0 {
-			i--
 		}
 	}
 }

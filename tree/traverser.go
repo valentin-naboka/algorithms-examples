@@ -1,8 +1,8 @@
 package tree
 
 import (
-	"github.com/algorithms-examples/tree-traverse/queue"
-	"github.com/algorithms-examples/tree-traverse/stack"
+	"github.com/algorithms-examples/queue"
+	"github.com/algorithms-examples/stack"
 )
 
 //Visitor interface to visit nodes while traversing the tree.

@@ -3,7 +3,7 @@ package list
 import (
 	"testing"
 
-	"github.com/algorithms-examples/tree-traverse/testutil"
+	"github.com/algorithms-examples/testutil"
 )
 
 func TestInsertAfter(t *testing.T) {
