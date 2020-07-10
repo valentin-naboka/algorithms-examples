@@ -1,9 +1,9 @@
 package testutil
 
 import (
-	"fmt"
 	"runtime"
 	"strings"
+	"testing"
 )
 
 func ToInt(v interface{}) int {
@@ -14,7 +14,7 @@ func ToInt(v interface{}) int {
 	return i
 }
 
-func PrintCaller(depth int) {
+func PrintCaller(t *testing.T, depth int) {
 	function, file, line, _ := runtime.Caller(depth)
 	trimName := func(n string) string {
 		i := strings.LastIndex(n, "/")
@@ -23,5 +23,5 @@ func PrintCaller(depth int) {
 		}
 		return n[i+1:]
 	}
-	fmt.Printf("\n%s: line %d, function: %s\n\n", trimName(file), line, trimName(runtime.FuncForPC(function).Name()))
+	t.Logf("%s: line %d, function: %s\n", trimName(file), line, trimName(runtime.FuncForPC(function).Name()))
 }

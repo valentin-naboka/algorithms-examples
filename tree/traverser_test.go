@@ -75,7 +75,7 @@ func testTree(t *testing.T, expected []interface{}, traverser func(*Node, Visito
 	visitor := newvisitor()
 	traverser(root, visitor)
 	if !reflect.DeepEqual(visitor.result, expected) {
-		testutil.PrintCaller(2)
+		testutil.PrintCaller(t, 2)
 		t.Errorf("expected: %v, got: %v\n\n", expected, visitor.result)
 	}
 }
