@@ -16,27 +16,7 @@ func (n *node) isFull() bool {
 	return len(n.values) >= maxChunkSize
 }
 
-func canMergeNodes(n *node) bool {
-	return n.next != nil &&
-		(len(n.values)-1+len(n.next.values)) < maxChunkSize
-}
-
-func removeValueFromNode(node *node, idx int) {
-	if canMergeNodes(node) {
-		copy(node.values[idx:], node.values[idx+1:])
-
-		currentNodeLen := len(node.values)
-		node.values = node.values[:currentNodeLen-1+len(node.next.values)]
-		copy(node.values[currentNodeLen-1:], node.next.values)
-		node.next = node.next.next
-	} else {
-		copy(node.values[idx:], node.values[idx+1:])
-		node.values = node.values[:len(node.values)-1]
-	}
-}
-
 type Iterator struct {
-	//TODO: can node be null? make check
 	node       *node
 	currentIdx int
 }
@@ -45,13 +25,33 @@ func (it *Iterator) MoveNext() *Iterator {
 
 	if it.currentIdx+1 < len(it.node.values) {
 		it.currentIdx++
-	} else {
-		it.node = it.node.next
-		it.currentIdx = 0
-		if it.node == nil {
-			return nil
-		}
+		return it
 	}
+
+	if it.node.next == nil {
+		return nil
+	}
+	it.node = it.node.next
+	it.currentIdx = 0
+	return it
+}
+
+func (it *Iterator) MoveTo(shift int) *Iterator {
+
+	if shift < len(it.node.values)-it.currentIdx {
+		it.currentIdx += shift
+		return it
+	}
+
+	for step := len(it.node.values) - it.currentIdx; shift >= step; step = len(it.node.values) {
+		shift -= step
+		if it.node.next == nil {
+			panic("shift is out of range")
+		}
+		it.node = it.node.next
+	}
+
+	it.currentIdx = shift
 	return it
 }
 
@@ -68,14 +68,8 @@ type UnrolledForwardList struct {
 	lenght int
 }
 
-func NewUnrolledForwardList(values ...interface{}) *UnrolledForwardList {
-	lenght := len(values)
-	if lenght == 0 {
-		return &UnrolledForwardList{nil, 0}
-	}
-
-	head := newNode(nil)
-	return &UnrolledForwardList{head, lenght}
+func NewUnrolledForwardList() *UnrolledForwardList {
+	return &UnrolledForwardList{nil, 0}
 }
 
 func (l *UnrolledForwardList) GetBegin() *Iterator {
@@ -89,30 +83,45 @@ func (l UnrolledForwardList) GetLength() int {
 	return l.lenght
 }
 
+func insertValue(values []interface{}, value interface{}, pos int) []interface{} {
+	nodeLen := len(values)
+	values = values[:nodeLen+1]
+	copy(values[pos+1:], values[pos:nodeLen])
+	values[pos] = value
+	return values
+}
+
 //TODO: tests
-func (l *UnrolledForwardList) InsertAfter(it *Iterator, v interface{}) *Iterator {
+func (l *UnrolledForwardList) InsertAfter(it *Iterator, v interface{}) {
 	if it == nil {
-		return nil
-	}
-
-	if it.node.isFull() {
-		it.node.next = newNode(it.node.next)
-
-		it.node.next.values = append(it.node.next.values, it.node.values[midOfChunk:]...)
-		it.node.next.values = append(it.node.next.values, v)
-
-		it.node.values = it.node.values[0:midOfChunk]
-		it.node = it.node.next
-	} else {
-		nodeLen := len(it.node.values)
-		it.node.values = it.node.values[:nodeLen+1]
-		insertIdx := it.currentIdx + 1
-		copy(it.node.values[insertIdx:], it.node.values[it.currentIdx:nodeLen])
-		it.node.values[insertIdx] = v
+		panic("insert after nil iterator")
 	}
 
 	l.lenght++
-	return it.MoveNext()
+	if !it.node.isFull() {
+		it.node.values = insertValue(it.node.values, v, it.currentIdx+1)
+		return
+	}
+
+	it.node.next = newNode(it.node.next)
+
+	if it.currentIdx < midOfChunk {
+		it.node.next.values = append(it.node.next.values, it.node.values[midOfChunk:]...)
+		it.node.values = insertValue(it.node.values[0:midOfChunk], v, it.currentIdx+1)
+		return
+	}
+
+	it.node.next.values = append(it.node.next.values, it.node.values[midOfChunk:it.currentIdx+1]...)
+	insertPos := it.currentIdx - midOfChunk + 1
+	if insertPos < midOfChunk {
+		it.node.next.values = append(it.node.next.values, v)
+		it.node.next.values = append(it.node.next.values, it.node.values[it.currentIdx+1:]...)
+	} else {
+		it.node.next.values = append(it.node.next.values, v)
+	}
+	it.node.values = it.node.values[0:midOfChunk]
+	it.node = it.node.next
+	it.currentIdx -= midOfChunk
 }
 
 //TODO: tests
@@ -137,6 +146,26 @@ func (l *UnrolledForwardList) PushFront(v interface{}) {
 	l.lenght++
 }
 
+func canMergeNodes(n *node) bool {
+	return n.next != nil &&
+		//NOTE: -1 to nake node up to 7 elements -> make test
+		(len(n.values)-1+len(n.next.values)) < maxChunkSize
+}
+
+func removeValueFromNode(node *node, idx int) {
+	if !canMergeNodes(node) {
+		copy(node.values[idx:], node.values[idx+1:])
+		node.values = node.values[:len(node.values)-1]
+		return
+	}
+
+	copy(node.values[idx:], node.values[idx+1:])
+	currentNodeLen := len(node.values)
+	node.values = node.values[:currentNodeLen-1+len(node.next.values)]
+	copy(node.values[currentNodeLen-1:], node.next.values)
+	node.next = node.next.next
+}
+
 //TODO: tests:
 // 1. nextNodeLen == 7, 8
 // 2. head.next.next != nil
@@ -151,16 +180,16 @@ func (l *UnrolledForwardList) PopFront() interface{} {
 }
 
 //TODO: tests
-//Returns iterator to the previous element
-func (l *UnrolledForwardList) RemoveAfter(it *Iterator) *Iterator {
-	if it.isLastValue() {
-		if it.node.next == nil {
-			panic("attempt to remove after the last item")
-		}
-		removeValueFromNode(it.node.next, 0)
-	} else {
+func (l *UnrolledForwardList) RemoveAfter(it *Iterator) {
+	if !it.isLastValue() {
 		removeValueFromNode(it.node, it.currentIdx+1)
+		l.lenght--
+		return
 	}
+
+	if it.node.next == nil {
+		panic("attempt to remove after the last item")
+	}
+	removeValueFromNode(it.node.next, 0)
 	l.lenght--
-	return it
 }

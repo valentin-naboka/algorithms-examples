@@ -9,15 +9,6 @@ import (
 	"github.com/algorithms-examples/testutil"
 )
 
-//TODO: remove
-func printListInternalState(list *UnrolledForwardList) {
-	for node := list.head; node != nil; node = node.next {
-		fmt.Printf("%v", node.values)
-	}
-	println()
-}
-
-//TODO: Try to use fixture?
 func printListStateIfFailed(t *testing.T, list *UnrolledForwardList) {
 	if t.Failed() {
 		var result string
@@ -31,7 +22,6 @@ func printListStateIfFailed(t *testing.T, list *UnrolledForwardList) {
 	}
 }
 
-//TODO: run coverage test
 func testList(t *testing.T, expected []interface{}, actual *SignlyLinkedList) {
 	if actual.GetHead() == nil {
 		testutil.PrintCaller(t, 2)
@@ -109,7 +99,7 @@ func TestRemoveAfter(t *testing.T) {
 	}
 }
 
-// Unrolled fowrward list tests
+// Unrolled forward list tests
 // ============================
 func testUnrolledList(t *testing.T, expected []interface{}, actual *UnrolledForwardList) {
 	if actual.GetBegin() == nil {
@@ -130,6 +120,28 @@ func testUnrolledList(t *testing.T, expected []interface{}, actual *UnrolledForw
 	printListStateIfFailed(t, actual)
 }
 
+func TestMoveToUnrolledList(t *testing.T) {
+	list := NewUnrolledForwardList()
+
+	data := []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}
+	for i := len(data) - 1; i >= 0; i-- {
+		list.PushFront(data[i])
+	}
+
+	for i := 1; i < len(data); i++ {
+		it := list.GetBegin().MoveTo(i)
+		checkValue(t, data[i], it.GetValue())
+	}
+
+	it := list.GetBegin().MoveTo(2)
+	it = it.MoveTo(13)
+	checkValue(t, data[15], it.GetValue())
+
+	it = list.GetBegin().MoveTo(1)
+	it = it.MoveTo(2)
+	checkValue(t, data[3], it.GetValue())
+}
+
 func TestPushFrontUnrolledList(t *testing.T) {
 	list := NewUnrolledForwardList()
 
@@ -139,11 +151,6 @@ func TestPushFrontUnrolledList(t *testing.T) {
 	}
 
 	testUnrolledList(t, data, list)
-
-	for node := list.head; node != nil; node = node.next {
-		fmt.Printf("%v", node.values)
-	}
-	println()
 }
 
 func TestInsertAfterUnrolledList(t *testing.T) {
@@ -154,33 +161,65 @@ func TestInsertAfterUnrolledList(t *testing.T) {
 
 	it := list.GetBegin()
 	for i := 1; i < len(data); i++ {
-		it = list.InsertAfter(it, data[i])
+		list.InsertAfter(it, data[i])
+		it.MoveNext()
 	}
 
 	testUnrolledList(t, data, list)
+}
 
-	//TODO: test internal representation
-	for node := list.head; node != nil; node = node.next {
-		fmt.Printf("%v", node.values)
+func newFullUnrolledForwardList(values ...interface{}) *UnrolledForwardList {
+	lenght := len(values)
+	if lenght == 0 {
+		return &UnrolledForwardList{nil, 0}
 	}
-	println()
+
+	head := newNode(nil)
+	var node *node = nil
+
+	for i := 0; i < lenght; i += maxChunkSize {
+		if node == nil {
+			node = head
+		} else {
+			node.next = newNode(nil)
+			node = node.next
+		}
+		node.values = append(node.values, values[i:i+maxChunkSize]...)
+	}
+
+	if lenght%maxChunkSize != 0 {
+		node.values = append(node.values, values[(lenght/maxChunkSize)*maxChunkSize:]...)
+	}
+	return &UnrolledForwardList{head, lenght}
 }
 
 func TestInsertAfterInMiddleUnrolledList(t *testing.T) {
 	list := NewUnrolledForwardList()
 
-	data := []interface{}{1, 2, 3, 4}
+	data := []interface{}{1, 2, 3, 4, 5, 6, 7}
 	list.PushFront(data[0])
 
 	it := list.GetBegin()
 	for i := 1; i < len(data); i++ {
-		it = list.InsertAfter(it, data[i])
+		list.InsertAfter(it, data[i])
+		it.MoveNext()
 	}
 
 	it = list.GetBegin()
-	list.InsertAfter(it, 1)
+	list.InsertAfter(it, 12)
 
-	testUnrolledList(t, []interface{}{1, 1, 2, 3, 4}, list)
+	testUnrolledList(t, []interface{}{1, 12, 2, 3, 4, 5, 6, 7}, list)
+
+	it = list.GetBegin().MoveTo(2)
+	list.InsertAfter(it, 23)
+
+	testUnrolledList(t, []interface{}{1, 12, 2, 23, 3, 4, 5, 6, 7}, list)
+
+	list = newFullUnrolledForwardList(1, 12, 2, 3, 4, 5, 6, 7)
+	it = list.GetBegin().MoveTo(4)
+	list.InsertAfter(it, 45)
+
+	testUnrolledList(t, []interface{}{1, 12, 2, 3, 4, 45, 5, 6, 7}, list)
 }
 
 func TestPopFrontUnrolledList(t *testing.T) {
@@ -209,14 +248,12 @@ func TestRemoveAfterUnrolledList(t *testing.T) {
 	}
 
 	for it := list.GetBegin(); list.GetLength() != 1; {
-		//TODO: check iterator validity
-		it = list.RemoveAfter(it)
+		list.RemoveAfter(it)
 
 		copy(data[1:], data[2:])
 		data = data[:len(data)-1]
 
 		testUnrolledList(t, data, list)
-		printListInternalState(list)
 	}
 }
 
