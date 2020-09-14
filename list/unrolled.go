@@ -113,12 +113,14 @@ func (l *UnrolledForwardList) InsertAfter(it *Iterator, v interface{}) {
 
 	it.node.next.values = append(it.node.next.values, it.node.values[midOfChunk:it.currentIdx+1]...)
 	insertPos := it.currentIdx - midOfChunk + 1
+
 	if insertPos < midOfChunk {
 		it.node.next.values = append(it.node.next.values, v)
 		it.node.next.values = append(it.node.next.values, it.node.values[it.currentIdx+1:]...)
 	} else {
 		it.node.next.values = append(it.node.next.values, v)
 	}
+
 	it.node.values = it.node.values[0:midOfChunk]
 	it.node = it.node.next
 	it.currentIdx -= midOfChunk
@@ -126,10 +128,13 @@ func (l *UnrolledForwardList) InsertAfter(it *Iterator, v interface{}) {
 
 //TODO: tests
 func (l *UnrolledForwardList) PushFront(v interface{}) {
+	l.lenght++
 	if l.head == nil {
 		l.head = newNode(nil)
 		l.head.values = append(l.head.values, v)
-	} else if l.head.isFull() {
+		return
+	}
+	if l.head.isFull() {
 		l.head = newNode(l.head)
 
 		l.head.values = append(l.head.values, v)
@@ -137,18 +142,18 @@ func (l *UnrolledForwardList) PushFront(v interface{}) {
 
 		copy(l.head.next.values, l.head.next.values[midOfChunk:])
 		l.head.next.values = l.head.next.values[:midOfChunk]
-
-	} else {
-		l.head.values = append(l.head.values, 0)
-		copy(l.head.values[1:], l.head.values)
-		l.head.values[0] = v
+		return
 	}
-	l.lenght++
+
+	l.head.values = append(l.head.values, 0)
+	copy(l.head.values[1:], l.head.values)
+	l.head.values[0] = v
+	return
 }
 
 func canMergeNodes(n *node) bool {
 	return n.next != nil &&
-		//NOTE: -1 to nake node up to 7 elements -> make test
+		//NOTE: -1 to make node up to 7 elements -> make test
 		(len(n.values)-1+len(n.next.values)) < maxChunkSize
 }
 
