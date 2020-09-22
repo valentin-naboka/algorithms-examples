@@ -65,7 +65,7 @@ func (it *Iterator) isLastValue() bool {
 
 type UnrolledForwardList struct {
 	head   *node
-	lenght int
+	length int
 }
 
 func NewUnrolledForwardList() *UnrolledForwardList {
@@ -73,14 +73,14 @@ func NewUnrolledForwardList() *UnrolledForwardList {
 }
 
 func (l *UnrolledForwardList) GetBegin() *Iterator {
-	if l.head == nil {
+	if l.head == nil || len(l.head.values) == 0 {
 		return nil
 	}
 	return &Iterator{l.head, 0}
 }
 
 func (l UnrolledForwardList) GetLength() int {
-	return l.lenght
+	return l.length
 }
 
 func insertValue(values []interface{}, value interface{}, pos int) []interface{} {
@@ -91,13 +91,12 @@ func insertValue(values []interface{}, value interface{}, pos int) []interface{}
 	return values
 }
 
-//TODO: tests
 func (l *UnrolledForwardList) InsertAfter(it *Iterator, v interface{}) {
 	if it == nil {
 		panic("insert after nil iterator")
 	}
 
-	l.lenght++
+	l.length++
 	if !it.node.isFull() {
 		it.node.values = insertValue(it.node.values, v, it.currentIdx+1)
 		return
@@ -126,9 +125,8 @@ func (l *UnrolledForwardList) InsertAfter(it *Iterator, v interface{}) {
 	it.currentIdx -= midOfChunk
 }
 
-//TODO: tests
 func (l *UnrolledForwardList) PushFront(v interface{}) {
-	l.lenght++
+	l.length++
 	if l.head == nil {
 		l.head = newNode(nil)
 		l.head.values = append(l.head.values, v)
@@ -157,11 +155,16 @@ func canMergeNodes(n *node) bool {
 		(len(n.values)-1+len(n.next.values)) < maxChunkSize
 }
 
-func removeValueFromNode(node *node, idx int) {
+func removeValueFromNode(node *node, idx int) *node {
 	if !canMergeNodes(node) {
+		nodeLen := len(node.values)
+		if nodeLen == 1 {
+			return node.next
+		}
+
 		copy(node.values[idx:], node.values[idx+1:])
-		node.values = node.values[:len(node.values)-1]
-		return
+		node.values = node.values[:nodeLen-1]
+		return node
 	}
 
 	copy(node.values[idx:], node.values[idx+1:])
@@ -169,32 +172,33 @@ func removeValueFromNode(node *node, idx int) {
 	node.values = node.values[:currentNodeLen-1+len(node.next.values)]
 	copy(node.values[currentNodeLen-1:], node.next.values)
 	node.next = node.next.next
+	return node
 }
 
-//TODO: tests:
-// 1. nextNodeLen == 7, 8
-// 2. head.next.next != nil
 func (l *UnrolledForwardList) PopFront() interface{} {
 	if l.head == nil {
 		panic("pop on empty list")
 	}
 
 	result := l.head.values[0]
-	removeValueFromNode(l.head, 0)
+	l.head = removeValueFromNode(l.head, 0)
 	return result
 }
 
 //TODO: tests
+//TODO: test l.length in all cases
 func (l *UnrolledForwardList) RemoveAfter(it *Iterator) {
 	if !it.isLastValue() {
+		//TODO: assing node
 		removeValueFromNode(it.node, it.currentIdx+1)
-		l.lenght--
+		l.length--
 		return
 	}
 
 	if it.node.next == nil {
 		panic("attempt to remove after the last item")
 	}
+	//TODO: assing node
 	removeValueFromNode(it.node.next, 0)
-	l.lenght--
+	l.length--
 }

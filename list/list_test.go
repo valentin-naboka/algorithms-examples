@@ -166,6 +166,9 @@ func testUnrolledForwardListInternals(t *testing.T, actual *UnrolledForwardList,
 		}
 		node = node.next
 	}
+	if node != nil {
+		t.Error("the actual list still has untested values")
+	}
 	printListStateIfFailed(t, actual)
 }
 
@@ -240,15 +243,15 @@ func TestInsertAfterUnrolledList(t *testing.T) {
 }
 
 func newFullUnrolledForwardList(values ...interface{}) *UnrolledForwardList {
-	lenght := len(values)
-	if lenght == 0 {
+	length := len(values)
+	if length == 0 {
 		return &UnrolledForwardList{nil, 0}
 	}
 
 	head := newNode(nil)
 	var node *node = nil
 
-	for i := 0; i < lenght; i += maxChunkSize {
+	for i := 0; i < length; i += maxChunkSize {
 		if node == nil {
 			node = head
 		} else {
@@ -258,10 +261,10 @@ func newFullUnrolledForwardList(values ...interface{}) *UnrolledForwardList {
 		node.values = append(node.values, values[i:i+maxChunkSize]...)
 	}
 
-	if lenght%maxChunkSize != 0 {
-		node.values = append(node.values, values[(lenght/maxChunkSize)*maxChunkSize:]...)
+	if length%maxChunkSize != 0 {
+		node.values = append(node.values, values[(length/maxChunkSize)*maxChunkSize:]...)
 	}
-	return &UnrolledForwardList{head, lenght}
+	return &UnrolledForwardList{head, length}
 }
 
 func TestInsertAfterInMiddleUnrolledList(t *testing.T) {
@@ -293,6 +296,77 @@ func TestInsertAfterInMiddleUnrolledList(t *testing.T) {
 	testUnrolledList(t, []interface{}{1, 12, 2, 3, 4, 45, 5, 6, 7}, list)
 }
 
+func insertAfter(list *UnrolledForwardList, it *Iterator, data ...interface{}) {
+	for _, v := range data {
+		list.InsertAfter(it, v)
+		it.MoveNext()
+	}
+}
+
+func TestInsertAfterUnrolledListInternals(t *testing.T) {
+	list := NewUnrolledForwardList()
+	list.PushFront(1)
+	it := list.GetBegin()
+
+	insertAfter(list, it, 2, 3, 4, 5, 6, 7, 8)
+	testUnrolledForwardListInternals(t, list, []interface{}{1, 2, 3, 4, 5, 6, 7, 8})
+
+	list.InsertAfter(it, 9)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4},
+		[]interface{}{5, 6, 7, 8, 9})
+
+	it = list.GetBegin().MoveTo(3)
+	insertAfter(list, it, 4, 4, 4, 4)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4, 4, 4, 4, 4},
+		[]interface{}{5, 6, 7, 8, 9})
+
+	it = list.GetBegin().MoveTo(9)
+	insertAfter(list, it, 6, 6, 6)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4, 4, 4, 4, 4},
+		[]interface{}{5, 6, 6, 6, 6, 7, 8, 9})
+
+	it = list.GetBegin().MoveTo(8)
+	insertAfter(list, it, 5, 5)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4, 4, 4, 4, 4},
+		[]interface{}{5, 5, 5, 6, 6, 6},
+		[]interface{}{6, 7, 8, 9})
+
+	it = list.GetBegin().MoveTo(10)
+	insertAfter(list, it, 56, 56)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4, 4, 4, 4, 4},
+		[]interface{}{5, 5, 5, 56, 56, 6, 6, 6},
+		[]interface{}{6, 7, 8, 9})
+
+	it = list.GetBegin().MoveTo(list.length - 1)
+	insertAfter(list, it, 10, 11, 12, 13)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4, 4, 4, 4, 4},
+		[]interface{}{5, 5, 5, 56, 56, 6, 6, 6},
+		[]interface{}{6, 7, 8, 9, 10, 11, 12, 13})
+
+	it = list.GetBegin().MoveTo(1)
+	insertAfter(list, it, 23)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 23, 3, 4},
+		[]interface{}{4, 4, 4, 4},
+		[]interface{}{5, 5, 5, 56, 56, 6, 6, 6},
+		[]interface{}{6, 7, 8, 9, 10, 11, 12, 13})
+
+	it = list.GetBegin().MoveTo(14)
+	insertAfter(list, it, 66)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 23, 3, 4},
+		[]interface{}{4, 4, 4, 4},
+		[]interface{}{5, 5, 5, 56},
+		[]interface{}{56, 6, 66, 6, 6},
+		[]interface{}{6, 7, 8, 9, 10, 11, 12, 13})
+}
+
 //====> PopFront tests
 func TestPopFrontUnrolledList(t *testing.T) {
 	data := []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
@@ -304,6 +378,106 @@ func TestPopFrontUnrolledList(t *testing.T) {
 		checkValue(t, i, value)
 		testUnrolledList(t, data[i:dataLen], list)
 	}
+}
+
+func newCustomFilledUnrolledForwardList(values ...[]interface{}) *UnrolledForwardList {
+	length := len(values)
+	if length == 0 {
+		return &UnrolledForwardList{nil, 0}
+	}
+
+	head := newNode(nil)
+	var node *node = nil
+
+	for _, v := range values {
+		if node == nil {
+			node = head
+		} else {
+			node.next = newNode(nil)
+			node = node.next
+		}
+		node.values = v
+	}
+
+	return &UnrolledForwardList{head, length}
+}
+
+func popNTimes(l *UnrolledForwardList, count int) {
+	for i := 0; i < count; i++ {
+		l.PopFront()
+	}
+}
+
+func TestPopFrontFromFullUnrolledListInternals(t *testing.T) {
+	list := newCustomFilledUnrolledForwardList(
+		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12, 13, 14, 15, 16})
+
+	popNTimes(list, 4)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12, 13, 14, 15, 16})
+
+	popNTimes(list, 3)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{8},
+		[]interface{}{9, 10, 11, 12, 13, 14, 15, 16})
+
+	popNTimes(list, 1)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{9, 10, 11, 12, 13, 14, 15, 16})
+
+	popNTimes(list, 4)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{13, 14, 15, 16})
+
+	popNTimes(list, 4)
+	var expected *node = nil
+	checkValue(t, expected, list.head)
+}
+
+func TestPopFrontFromHalfFilledUnrolledListInternals(t *testing.T) {
+	list := newCustomFilledUnrolledForwardList(
+		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18},
+		[]interface{}{19})
+
+	popNTimes(list, 4)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18},
+		[]interface{}{19})
+
+	popNTimes(list, 1)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{6, 7, 8, 9, 10, 11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18},
+		[]interface{}{19})
+
+	popNTimes(list, 5)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18},
+		[]interface{}{19})
+
+	popNTimes(list, 1)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{12, 13, 14, 15, 16, 17, 18},
+		[]interface{}{19})
+
+	popNTimes(list, 1)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{13, 14, 15, 16, 17, 18, 19})
+
+	popNTimes(list, 6)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{19})
+
+	popNTimes(list, 1)
+	var expected *node = nil
+	checkValue(t, expected, list.head)
 }
 
 //====> RemoveAfter tests
@@ -320,5 +494,3 @@ func TestRemoveAfterUnrolledList(t *testing.T) {
 		testUnrolledList(t, data, list)
 	}
 }
-
-//TODO: add cases to test internal storage representation
