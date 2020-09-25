@@ -153,13 +153,14 @@ func testUnrolledForwardListInternals(t *testing.T, actual *UnrolledForwardList,
 		t.Errorf("list is empty")
 	}
 
+	expectedLen := 0
 	node := actual.head
 	for _, expectedValues := range expected {
 		if node == nil {
 			t.Error("the end of the list reached early ")
 			break
 		}
-
+		expectedLen += len(expectedValues)
 		if !reflect.DeepEqual(expectedValues, node.values) {
 			testutil.PrintCaller(t, 2)
 			t.Errorf("Expected: %d, Actual: %d\n", expectedValues, node.values)
@@ -168,6 +169,11 @@ func testUnrolledForwardListInternals(t *testing.T, actual *UnrolledForwardList,
 	}
 	if node != nil {
 		t.Error("the actual list still has untested values")
+	}
+
+	if expectedLen != actual.GetLength() {
+		testutil.PrintCaller(t, 2)
+		t.Errorf("the actual length is unexpected - expected: %d, actual: %d", expected, actual.GetLength())
 	}
 	printListStateIfFailed(t, actual)
 }
@@ -381,14 +387,14 @@ func TestPopFrontUnrolledList(t *testing.T) {
 }
 
 func newCustomFilledUnrolledForwardList(values ...[]interface{}) *UnrolledForwardList {
-	length := len(values)
-	if length == 0 {
+	if len(values) == 0 {
 		return &UnrolledForwardList{nil, 0}
 	}
 
 	head := newNode(nil)
 	var node *node = nil
 
+	length := 0
 	for _, v := range values {
 		if node == nil {
 			node = head
@@ -396,7 +402,9 @@ func newCustomFilledUnrolledForwardList(values ...[]interface{}) *UnrolledForwar
 			node.next = newNode(nil)
 			node = node.next
 		}
-		node.values = v
+		node.values = node.values[:len(v)]
+		copy(node.values, v)
+		length += len(v)
 	}
 
 	return &UnrolledForwardList{head, length}
@@ -493,4 +501,98 @@ func TestRemoveAfterUnrolledList(t *testing.T) {
 
 		testUnrolledList(t, data, list)
 	}
+}
+
+func removeAfter(list *UnrolledForwardList, it *Iterator, step, count int) {
+
+	for i := 0; i < count; i++ {
+		list.RemoveAfter(it)
+		it.MoveTo(step)
+	}
+}
+func TestRemoveAfterFromFullUnrolledListInternals(t *testing.T) {
+	list := newCustomFilledUnrolledForwardList(
+		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12, 13, 14, 15, 16})
+
+	it := list.GetBegin()
+	removeAfter(list, it, 1, 4)
+
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 3, 5, 7},
+		[]interface{}{9, 10, 11, 12, 13, 14, 15, 16})
+
+	removeAfter(list, it, 1, 4)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 3, 5, 7},
+		[]interface{}{9, 11, 13, 15})
+
+	list.RemoveAfter(list.GetBegin().MoveNext())
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 3, 7, 9, 11, 13, 15})
+
+	removeAfter(list, list.GetBegin(), 1, 3)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 7, 11, 15})
+
+	removeAfter(list, list.GetBegin(), 0, 3)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1})
+}
+
+func TestRemoveAfterFromHalfFilledUnrolledListInternals(t *testing.T) {
+	list := newCustomFilledUnrolledForwardList(
+		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18},
+		[]interface{}{19},
+		[]interface{}{20})
+
+	it := list.GetBegin().MoveTo(list.GetLength() - 3)
+	list.RemoveAfter(it)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18},
+		[]interface{}{20})
+
+	list.RemoveAfter(it)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 3, 4, 5, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18})
+
+	it = list.GetBegin().MoveNext()
+	removeAfter(list, it, 0, 3)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 6, 7, 8},
+		[]interface{}{9, 10, 11, 12},
+		[]interface{}{13, 14, 15, 16, 17, 18})
+
+	it = list.GetBegin().MoveTo(4)
+	removeAfter(list, it, 0, 3)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 6, 7, 8},
+		[]interface{}{12, 13, 14, 15, 16, 17, 18})
+
+	it = list.GetBegin().MoveTo(4)
+	list.RemoveAfter(it)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 2, 6, 7, 8},
+		[]interface{}{13, 14, 15, 16, 17, 18})
+
+	it = list.GetBegin()
+	removeAfter(list, it, 0, 4)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 13, 14, 15, 16, 17, 18})
+
+	it = it.MoveTo(list.GetLength() - 2)
+	list.RemoveAfter(it)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 13, 14, 15, 16, 17})
+
+	it = list.GetBegin()
+	removeAfter(list, it, 0, 4)
+	testUnrolledForwardListInternals(t, list,
+		[]interface{}{1, 17})
 }

@@ -46,7 +46,7 @@ func (it *Iterator) MoveTo(shift int) *Iterator {
 	for step := len(it.node.values) - it.currentIdx; shift >= step; step = len(it.node.values) {
 		shift -= step
 		if it.node.next == nil {
-			panic("shift is out of range")
+			return nil
 		}
 		it.node = it.node.next
 	}
@@ -151,20 +151,16 @@ func (l *UnrolledForwardList) PushFront(v interface{}) {
 
 func canMergeNodes(n *node) bool {
 	return n.next != nil &&
-		//NOTE: -1 to make node up to 7 elements -> make test
+		//NOTE: -1 to make node up to 7 elements
 		(len(n.values)-1+len(n.next.values)) < maxChunkSize
 }
 
-func removeValueFromNode(node *node, idx int) *node {
+func removeValueFromNode(node *node, idx int) {
 	if !canMergeNodes(node) {
 		nodeLen := len(node.values)
-		if nodeLen == 1 {
-			return node.next
-		}
-
 		copy(node.values[idx:], node.values[idx+1:])
 		node.values = node.values[:nodeLen-1]
-		return node
+		return
 	}
 
 	copy(node.values[idx:], node.values[idx+1:])
@@ -172,7 +168,6 @@ func removeValueFromNode(node *node, idx int) *node {
 	node.values = node.values[:currentNodeLen-1+len(node.next.values)]
 	copy(node.values[currentNodeLen-1:], node.next.values)
 	node.next = node.next.next
-	return node
 }
 
 func (l *UnrolledForwardList) PopFront() interface{} {
@@ -181,15 +176,16 @@ func (l *UnrolledForwardList) PopFront() interface{} {
 	}
 
 	result := l.head.values[0]
-	l.head = removeValueFromNode(l.head, 0)
+	removeValueFromNode(l.head, 0)
+	if len(l.head.values) == 0 {
+		l.head = l.head.next
+	}
+	l.length--
 	return result
 }
 
-//TODO: tests
-//TODO: test l.length in all cases
 func (l *UnrolledForwardList) RemoveAfter(it *Iterator) {
 	if !it.isLastValue() {
-		//TODO: assing node
 		removeValueFromNode(it.node, it.currentIdx+1)
 		l.length--
 		return
@@ -198,7 +194,10 @@ func (l *UnrolledForwardList) RemoveAfter(it *Iterator) {
 	if it.node.next == nil {
 		panic("attempt to remove after the last item")
 	}
-	//TODO: assing node
 	removeValueFromNode(it.node.next, 0)
+
+	if len(it.node.next.values) == 0 {
+		it.node.next = it.node.next.next
+	}
 	l.length--
 }
