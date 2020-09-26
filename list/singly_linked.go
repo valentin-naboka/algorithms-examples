@@ -6,11 +6,6 @@ type Node struct {
 }
 
 func (n *Node) MoveNext() *Node {
-	//TODO: remove
-	if n == nil {
-		return nil
-	}
-
 	return n.next
 }
 
